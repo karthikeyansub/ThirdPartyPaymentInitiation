@@ -38,7 +38,7 @@ public class PaymentInitiationController
      *            the Payment Initiation Request
      * @return ResponseEntity<PaymentAcceptedResponse>
      */
-    @Secured("SUBJECT_NAME")
+    @Secured("ROLE_USER")
     @CrossOrigin
     @PostMapping(path = "/initiate-payment", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PaymentAcceptedResponse> initiatePayment(
