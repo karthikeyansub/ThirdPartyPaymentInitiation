@@ -10,6 +10,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import com.rebobank.payment.exception.InvalidSignatureException;
 import com.rebobank.payment.exception.LimitExceededException;
 import com.rebobank.payment.exception.UnknownCertificateException;
 import com.rebobank.payment.model.PaymentRejectedResponse;
@@ -48,12 +49,31 @@ public class ExceptionListener
                 HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
-    public ResponseEntity<PaymentRejectedResponse> handleUnknownCertificationException(
-            UnknownCertificateException exception)
+    @ExceptionHandler(value = {UnknownCertificateException.class, InvalidSignatureException.class})
+    public ResponseEntity<PaymentRejectedResponse> handleCustomerException(
+            Exception exception)
+    {
+        if(exception instanceof UnknownCertificateException)
+        {
+            response = new PaymentRejectedResponse(TransactionStatus.Rejected, exception.getMessage(),
+                    ErrorReasonCode.UNKNOWN_CERTIFICATE);
+        } else if(exception instanceof InvalidSignatureException)
+        {
+            response = new PaymentRejectedResponse(TransactionStatus.Rejected, exception.getMessage(),
+                    ErrorReasonCode.INVALID_SIGNATURE);
+        }
+        return new ResponseEntity<PaymentRejectedResponse>(response,
+                HttpStatus.BAD_REQUEST);
+    }
+    
+    @ExceptionHandler(value = Exception.class)
+    public ResponseEntity<PaymentRejectedResponse> handleGenericException(
+            Exception exception)
     {
         response = new PaymentRejectedResponse(TransactionStatus.Rejected, exception.getMessage(),
-                ErrorReasonCode.UNKNOWN_CERTIFICATE);
+                ErrorReasonCode.GENERAL_ERROR);
+        
         return new ResponseEntity<PaymentRejectedResponse>(response,
-                HttpStatus.UNPROCESSABLE_ENTITY);
+                HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
