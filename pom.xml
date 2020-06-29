@@ -28,6 +28,10 @@
 		    <groupId>org.springframework.boot</groupId>
 		    <artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
+		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
 		<!-- End of Spring Boot dependencies -->
 
 		<!-- Useful dependencies. -->
@@ -36,10 +40,10 @@
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 		    <groupId>javax.validation</groupId>
 		    <artifactId>validation-api</artifactId>
-		</dependency>
+		</dependency> -->
 		<!-- End of Useful dependencies -->
 		
 		<!-- Test dependencies -->
@@ -48,6 +52,11 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+	    <groupId>org.springframework.security</groupId>
+	    <artifactId>spring-security-test</artifactId>
+	    <scope>test</scope>
+	</dependency>
 		<!-- End of Test dependencies -->
 	</dependencies>
 

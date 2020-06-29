@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-//TODO: need to check whether to use JSON null check or javax validation check
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

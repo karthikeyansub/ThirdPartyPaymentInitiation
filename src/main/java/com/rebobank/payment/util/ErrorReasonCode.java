@@ -1,5 +1,8 @@
 package com.rebobank.payment.util;
 
+/**
+ * Error reason codes
+ */
 public enum ErrorReasonCode
 {
 	UNKNOWN_CERTIFICATE,

@@ -35,6 +35,7 @@ public class PaymentInitiationService
      */
     public PaymentAcceptedResponse initiatePayment(final PaymentInitiationRequest request)
     {
+        //Check the transaction amount limit
         checkAmountLimit(request);
 
         // Accept payment request
@@ -50,7 +51,6 @@ public class PaymentInitiationService
         final BigDecimal amount = new BigDecimal(request.getAmount());
 
         // Extract the numbers from the DebtorIBAN
-        System.out.println(request.getDebtorIBAN().replaceAll("\\D+", ""));
         Long digits = Long.parseLong(request.getDebtorIBAN().replaceAll("\\D+", ""));
         Long sumOfDigits = 0L;
 
@@ -59,12 +59,10 @@ public class PaymentInitiationService
             sumOfDigits = sumOfDigits + digits % 10;
             digits = digits / 10;
         }
-        System.out.println(sumOfDigits);
-        System.out.println(request.getDebtorIBAN().length());
-        System.out.println(BigDecimal.ZERO.compareTo(amount) < 0);
-        System.out.println(sumOfDigits % request.getDebtorIBAN().length());
+        
         if (BigDecimal.ZERO.compareTo(amount) < 0
                 && (sumOfDigits % request.getDebtorIBAN().length()) == 0) {
+            LOGGER.error("Limit exceeded error");
             throw new LimitExceededException("Amount limit exceeded");
         }
     }

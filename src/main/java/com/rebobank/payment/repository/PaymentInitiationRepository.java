@@ -4,6 +4,9 @@ import java.util.UUID;
 
 import com.rebobank.payment.model.PaymentInitiationRequest;
 
+/**
+ * Payment initiation repository
+ */
 public interface PaymentInitiationRepository
 {
 
