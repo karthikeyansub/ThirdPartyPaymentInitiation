@@ -34,26 +34,28 @@ public class PaymentInitiationSecurityConfig extends WebSecurityConfigurerAdapte
                 .anyRequest().authenticated()
                 .and()
                 .x509()
-                .subjectPrincipalRegex("CN=(.*?)(?:,|$)")
+                //.subjectPrincipalRegex("CN=(.*?)(?:,|$)")
                 .x509AuthenticationFilter(customFilter)
-                .userDetailsService(userDetailsService())
+                //.userDetailsService(userDetailsService())
         ;
 
     }
     
     
-    @Bean
-    public UserDetailsService userDetailsService()
-    {
-        return (UserDetailsService) name ->
-        {
-            if (name.startsWith("Sandbox-TPP")) {
-                return new User(name, "",
-                        AuthorityUtils.commaSeparatedStringToAuthorityList("ROLE_USER"));
-            } else {
-                throw new UnknownCertificateException("Unknown Certificate");
-            }
-        };
-    }
+    /*
+     * @Bean
+     * public UserDetailsService userDetailsService()
+     * {
+     * return (UserDetailsService) name ->
+     * {
+     * if (name.startsWith("Sandbox-TPP")) {
+     * return new User(name, "",
+     * AuthorityUtils.commaSeparatedStringToAuthorityList("ROLE_USER"));
+     * } else {
+     * throw new UnknownCertificateException("Unknown Certificate");
+     * }
+     * };
+     * }
+     */
 
 }

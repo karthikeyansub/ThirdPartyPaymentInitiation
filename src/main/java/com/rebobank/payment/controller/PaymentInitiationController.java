@@ -1,6 +1,5 @@
 package com.rebobank.payment.controller;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import com.rebobank.payment.model.PaymentAcceptedResponse;
@@ -38,7 +37,7 @@ public class PaymentInitiationController
      *            the Payment Initiation Request
      * @return ResponseEntity<PaymentAcceptedResponse>
      */
-   // @Secured("ROLE_USER")
+    @Secured("ROLE_USER")
     @PostMapping(path = "/initiate-payment", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PaymentAcceptedResponse> initiatePayment(
            @Valid @RequestBody final PaymentInitiationRequest request)

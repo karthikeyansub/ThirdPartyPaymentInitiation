@@ -1,7 +1,6 @@
 
 package com.rebobank.payment.filter;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.InvalidKeyException;
@@ -14,6 +13,10 @@ import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.Scanner;
 
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
+import javax.naming.ldap.Rdn;
+import javax.security.auth.x500.X500Principal;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -24,12 +27,13 @@ import javax.servlet.http.HttpServletResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rebobank.payment.config.AuthenticationRequestWrapper;
 import com.rebobank.payment.constant.PaymentInitiationConstant;
+import com.rebobank.payment.exception.GenericException;
 import com.rebobank.payment.exception.InvalidSignatureException;
-
+import com.rebobank.payment.exception.UnknownCertificateException;
 import com.rebobank.payment.model.PaymentRejectedResponse;
 import com.rebobank.payment.util.ErrorReasonCode;
 import com.rebobank.payment.util.TransactionStatus;
-import org.apache.tomcat.util.http.fileupload.IOUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -81,6 +85,24 @@ public class CustomX509AuthenticationFilter extends X509AuthenticationFilter
             setAuthenticationManager(this.http.getSharedObject(AuthenticationManager.class));
             X509Certificate x509Certificate = extractClientCertificate(request);
             PublicKey publicKey = x509Certificate.getPublicKey();
+            
+            X500Principal principal = x509Certificate.getSubjectX500Principal();
+            
+            String commonName = null;
+            final LdapName ln = new LdapName(principal.getName());
+            for(Rdn rdn : ln.getRdns()) {
+                if(rdn.getType().equalsIgnoreCase("CN")) {
+                    LOGGER.debug("Common name: " + rdn.getValue());
+                    commonName = (String) rdn.getValue();
+                    break;
+                }
+            }
+            
+            //White list validation
+            if(null == commonName || !commonName.startsWith("Sandbox-TPP"))
+            {
+                throw new UnknownCertificateException("Unknown Certification");
+            }
 
             byte[] signatureBytes = Base64.getDecoder().decode(signatureInput.getBytes("utf-8"));
 
@@ -101,10 +123,10 @@ public class CustomX509AuthenticationFilter extends X509AuthenticationFilter
             return x509Certificate;
 
         }
-        catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException | IOException exception)
+        catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException | IOException | InvalidNameException exception)
         {
             LOGGER.error("INVALID_SIGNATURE", exception);
-            throw new InvalidSignatureException("Invalid Signature");
+            throw new GenericException("Invalid Signature");
         }
     }
     
@@ -142,21 +164,52 @@ public class CustomX509AuthenticationFilter extends X509AuthenticationFilter
             HttpServletResponse responseNew = (HttpServletResponse) response;
             getPreAuthenticatedCredentials((HttpServletRequest) requestNew);
             chain.doFilter(requestNew, responseNew);
-        } catch (Exception e) {
-            e.printStackTrace();
-            setErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, (HttpServletResponse) response, e);
+        } catch (Exception exception) {
+            if(exception instanceof InvalidSignatureException)
+            {
+                setInvaildSignatureErrorResponse(HttpStatus.BAD_REQUEST, (HttpServletResponse) response, exception);
+            } else if(exception instanceof UnknownCertificateException)
+            {
+                setUnknownCertificationResponse(HttpStatus.BAD_REQUEST, (HttpServletResponse) response, exception);
+            } else if(exception instanceof GenericException)
+            {
+                setGenericErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, (HttpServletResponse) response, exception);
+            }
         }
     }
-    public void setErrorResponse(HttpStatus status, HttpServletResponse response, Throwable ex) throws IOException {
+    
+    private void setInvaildSignatureErrorResponse(HttpStatus status, HttpServletResponse response, Throwable ex) throws IOException {
 
         response.setStatus(status.value());
         response.setContentType("application/json");
         PrintWriter writer = response.getWriter();
-        PaymentRejectedResponse paymentRejectedResponse=new PaymentRejectedResponse(TransactionStatus.Rejected,"Testing", ErrorReasonCode.INVALID_SIGNATURE);
+        PaymentRejectedResponse paymentRejectedResponse=new PaymentRejectedResponse(TransactionStatus.Rejected,ex.getLocalizedMessage(), ErrorReasonCode.INVALID_SIGNATURE);
         ObjectMapper objectMapper=new ObjectMapper();
         writer.write(objectMapper.writeValueAsString(paymentRejectedResponse));
         writer.close();
-       // response.sendError(4001,"Testing");
+    }
+    
+    private void setUnknownCertificationResponse(HttpStatus status, HttpServletResponse response, Throwable ex) throws IOException {
+
+        response.setStatus(status.value());
+        response.setContentType("application/json");
+        PrintWriter writer = response.getWriter();
+        PaymentRejectedResponse paymentRejectedResponse=new PaymentRejectedResponse(TransactionStatus.Rejected,ex.getLocalizedMessage(), ErrorReasonCode.UNKNOWN_CERTIFICATE);
+        ObjectMapper objectMapper=new ObjectMapper();
+        writer.write(objectMapper.writeValueAsString(paymentRejectedResponse));
+        writer.close();
+
+    }
+    
+    private void setGenericErrorResponse(HttpStatus status, HttpServletResponse response, Throwable ex) throws IOException {
+
+        response.setStatus(status.value());
+        response.setContentType("application/json");
+        PrintWriter writer = response.getWriter();
+        PaymentRejectedResponse paymentRejectedResponse=new PaymentRejectedResponse(TransactionStatus.Rejected,ex.getLocalizedMessage(), ErrorReasonCode.GENERAL_ERROR);
+        ObjectMapper objectMapper=new ObjectMapper();
+        writer.write(objectMapper.writeValueAsString(paymentRejectedResponse));
+        writer.close();
 
     }
 }
