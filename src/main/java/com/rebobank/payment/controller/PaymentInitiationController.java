@@ -38,10 +38,10 @@ public class PaymentInitiationController
      *            the Payment Initiation Request
      * @return ResponseEntity<PaymentAcceptedResponse>
      */
-    @Secured("ROLE_USER")
+   // @Secured("ROLE_USER")
     @PostMapping(path = "/initiate-payment", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PaymentAcceptedResponse> initiatePayment(
-            @Valid @RequestBody final PaymentInitiationRequest request, HttpServletRequest httpRequest)
+           @Valid @RequestBody final PaymentInitiationRequest request)
     {
         LOGGER.info("Initiate payment controller");
         PaymentAcceptedResponse response = paymentInitiationService.initiatePayment(request);

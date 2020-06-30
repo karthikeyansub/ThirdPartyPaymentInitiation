@@ -1,7 +1,9 @@
 
 package com.rebobank.payment.filter;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -12,13 +14,25 @@ import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.Scanner;
 
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rebobank.payment.config.AuthenticationRequestWrapper;
 import com.rebobank.payment.constant.PaymentInitiationConstant;
 import com.rebobank.payment.exception.InvalidSignatureException;
 
+import com.rebobank.payment.model.PaymentRejectedResponse;
+import com.rebobank.payment.util.ErrorReasonCode;
+import com.rebobank.payment.util.TransactionStatus;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.authentication.preauth.x509.X509AuthenticationFilter;
@@ -46,13 +60,16 @@ public class CustomX509AuthenticationFilter extends X509AuthenticationFilter
         String xRequestId = request.getHeader(PaymentInitiationConstant.REQUEST_PARAM_NAME_X_REQUEST_ID);
         String body = "";
 
+
         byte[] requestId = xRequestId.getBytes();
         try
         {
             if ("POST".equalsIgnoreCase(request.getMethod()))
             {
-                Scanner scanner = new Scanner(request.getInputStream(), "UTF-8").useDelimiter("\\A");
-                body = scanner.hasNext() ? scanner.next() : "";
+                    Scanner scanner = new Scanner(request.getInputStream(), "UTF-8").useDelimiter("\\A");
+                    body = scanner.hasNext() ? scanner.next() : "";
+
+                    System.out.println(body);
             }
 
             byte[] payloadMsg = getDigestMessage(body);
@@ -78,7 +95,7 @@ public class CustomX509AuthenticationFilter extends X509AuthenticationFilter
             LOGGER.info("The signature is " + (isSignatureOK ? "" : "NOT ") + "VALID");
             if(!isSignatureOK)
             {
-                throw new InvalidSignatureException("Invalid Signature");
+               throw new InvalidSignatureException("Invalid Signature");
             }
             
             return x509Certificate;
@@ -115,5 +132,31 @@ public class CustomX509AuthenticationFilter extends X509AuthenticationFilter
 
         // Compute the message digest
         return md.digest();
+    }
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response,
+                         FilterChain chain) throws IOException, ServletException {
+        try{
+            ServletRequest requestNew = new AuthenticationRequestWrapper((HttpServletRequest) request);
+            HttpServletResponse responseNew = (HttpServletResponse) response;
+            getPreAuthenticatedCredentials((HttpServletRequest) requestNew);
+            chain.doFilter(requestNew, responseNew);
+        } catch (Exception e) {
+            e.printStackTrace();
+            setErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, (HttpServletResponse) response, e);
+        }
+    }
+    public void setErrorResponse(HttpStatus status, HttpServletResponse response, Throwable ex) throws IOException {
+
+        response.setStatus(status.value());
+        response.setContentType("application/json");
+        PrintWriter writer = response.getWriter();
+        PaymentRejectedResponse paymentRejectedResponse=new PaymentRejectedResponse(TransactionStatus.Rejected,"Testing", ErrorReasonCode.INVALID_SIGNATURE);
+        ObjectMapper objectMapper=new ObjectMapper();
+        writer.write(objectMapper.writeValueAsString(paymentRejectedResponse));
+        writer.close();
+       // response.sendError(4001,"Testing");
+
     }
 }
