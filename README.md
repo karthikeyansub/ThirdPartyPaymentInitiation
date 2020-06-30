@@ -1,20 +1,9 @@
 # ThirdPartyPaymentInitiation
 
-#Create folders to generate all files (separated for client and server)
-mkdir ssl && cd ssl && mkdir client && mkdir server
-## Server
-create new file server/serverPrivateKey.pem using the Private Key from the Assignments -Senior/Assignments/example-signature.md file
-create new file server/server.crt using the Signature Certificate given in the Assignments -Senior/Assignments/example-signature.md file
+# Create certificate file using the and private key file with the given value in the example-signature.md file
 
-## Client
-# Generate client's private key and a certificate signing request (CSR)
-> openssl req -new -newkey rsa:4096 -out client/request.csr -keyout client/myPrivateKey.pem -nodes
-## Server
-# Sign client's CSR with server private key and a related certificate
-> openssl x509 -req -days 360 -in request.csr -CA server/server.crt -CAkey server/serverPrivateKey.pem -CAcreateserial -out client/cilentCertificate.crt -sha256
-## Client
-# Create PKCS12 keystore containing client's private key and related self-sign certificate 
-> openssl pkcs12 -export -out client/clientKeyStore.p12 -inkey client/myPrivateKey.pem -in client/cilentCertificate.crt -certfile server/server.crt
+> certificate.crt
+> privateKey.pem
 
 ## Run Spring Boot Application
 
@@ -28,8 +17,10 @@ create new file server/server.crt using the Signature Certificate given in the A
 
 ## Test the application using Postman Rest Client
 
-Step #1: Add the client certificate in Postman -> Settings -> Certificate tab
+Step #1: Add the client certificate and private key file in Postman -> Settings -> Certificate tab
 
 Step #2: invoke the initiate-payment service with below URL
 
 > https://localhost:8080/v1.0.0/initiate-payment
+
+Step #3: Use the payload, x-request-id and signature given in the example-signature.md file for testing
