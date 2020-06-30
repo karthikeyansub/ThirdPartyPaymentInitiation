@@ -1,7 +1,5 @@
 package com.rebobank.payment.controller;
 
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,7 +25,9 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
-
+/**
+ * Test for PaymentInitiationController
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @WithMockUser
@@ -44,10 +44,14 @@ public class PaymentInitiationControllerTest
     private ObjectMapper objectMapper;
     
     @BeforeEach
-    public void setUp() throws NoSuchAlgorithmException, KeyManagementException
+    public void setUp()
     {
     }
 
+    /**
+     * Test initiate payment with valid input and expected payment accepted status
+     * @throws Exception not expected exception
+     */
     @Test
     public void testInitiatePayment_Expect_Payment_Accepted() throws Exception
     {
@@ -67,6 +71,10 @@ public class PaymentInitiationControllerTest
                  .andExpect(jsonPath("$.status", is("Accepted")));
     }
     
+    /**
+     * Test initiate payment, expected payment rejected response due to limit exceeded
+     * @throws Exception not expected exception
+     */
     @Test
     public void testInitiatePayment_Expect_Payment_Rejected_With_Reason_Limit_Exceeded() throws Exception
     {
@@ -83,6 +91,10 @@ public class PaymentInitiationControllerTest
                  .andExpect(jsonPath("$.reasonCode", is("LIMIT_EXCEEDED")));
     }
     
+    /**
+     * Test initiate payment, expected payment rejected response due to invalid Debtor IBAN
+     * @throws Exception not expected exception
+     */
     @Test
     public void testInitiatePayment_Expect_Payment_Rejected_With_Invalid_DebtorIBAN() throws Exception
     {
@@ -97,6 +109,10 @@ public class PaymentInitiationControllerTest
                  .andExpect(jsonPath("$.reasonCode", is("INVALID_REQUEST")));
     }
     
+    /**
+     * Test initiate payment, expected payment rejected response due to Creditor IBAN is null
+     * @throws Exception not expected exception
+     */
     @Test
     public void testInitiatePayment_Expect_Payment_Rejected_With_Null_CreditorIBAN() throws Exception
     {
