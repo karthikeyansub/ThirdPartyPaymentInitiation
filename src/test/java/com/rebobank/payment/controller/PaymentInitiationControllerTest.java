@@ -1,6 +1,7 @@
 package com.rebobank.payment.controller;
 
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -34,7 +35,6 @@ import com.rebobank.payment.util.TransactionStatus;
  */
 @SpringBootTest
 @AutoConfigureMockMvc
-// @WithMockUser
 public class PaymentInitiationControllerTest
 {
 
@@ -119,40 +119,50 @@ public class PaymentInitiationControllerTest
      * @throws Exception
      *             not expected exception
      */
-    // @Test
-    public void testInitiatePayment_Expect_Payment_Rejected_With_Invalid_DebtorIBAN() // NOSONAR
+    @Test
+    public void testInitiatePayment_Expect_Payment_Rejected_With_Null_Mandatory_Field() // NOSONAR
             throws Exception
     {
-        final PaymentInitiationRequest request = new PaymentInitiationRequest("INVALID_IBAN",
-                "NL91ABNA0417164304", "70.00", "GBR", "U1002");
+        final PaymentInitiationRequest request = new PaymentInitiationRequest("NL02RABO7134384551",
+                "NL94ABNA1008270121", "1.00", null, null);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/initiate-payment")
+                .header("X-Request-Id", "29318e25-cebd-498c-888a-f77672f66449")
+                .header("Signature", getValidSignature())
+                .header("Signature-Certificate", getValidCertificate())
                 .content(objectMapper.writeValueAsString(request))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(jsonPath("$.status", is("Rejected")))
-                .andExpect(jsonPath("$.reasonCode", is("INVALID_REQUEST")));
+                .andExpect(jsonPath("$.reasonCode", is("INVALID_REQUEST")))
+                .andExpect(jsonPath("$.reason", containsString("EndToEndId is null")));
     }
-
-    /**
-     * Test initiate payment, expected payment rejected response due to Creditor
-     * IBAN is null
-     * 
-     * @throws Exception
-     *             not expected exception
-     */
-    // @Test
-    public void testInitiatePayment_Expect_Payment_Rejected_With_Null_CreditorIBAN() // NOSONAR
+    
+    @Test
+    public void testInitiatePayment_Expect_Payment_Rejected_Expected_Invalid_Signature() // NOSONAR
             throws Exception
     {
-        final PaymentInitiationRequest request = new PaymentInitiationRequest("NL91ABNA0417164305",
-                null, "100.00", "EUR", "U1000");
+        final PaymentInitiationRequest request = new PaymentInitiationRequest("NL02RABO7134384550",
+                "NL94ABNA1008270131", "1.00", null, "U1005");
 
         mockMvc.perform(MockMvcRequestBuilders.post("/initiate-payment")
+                .header("X-Request-Id", "29318e25-cebd-498c-888a-f77672f66449")
+                .header("Signature", getValidSignature())
+                .header("Signature-Certificate", getValidCertificate())
                 .content(objectMapper.writeValueAsString(request))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(jsonPath("$.status", is("Rejected")))
-                .andExpect(jsonPath("$.reasonCode", is("INVALID_REQUEST")));
+                .andExpect(jsonPath("$.reasonCode", is("INVALID_SIGNATURE")));
+    }
+    
+    private String getValidSignature()
+    {
+        return "AlFr/WbYiekHmbB6XdEO/7ghKd0n6q/bapENAYsL86KoYHqa4eP34xfH9icpQRmTpH0qOkt1vfUPWnaqu+vHBWx/gJXiuVlhayxLZD2w41q8ITkoj4oRLn2U1q8cLbjUtjzFWX9TgiQw1iY0ezpFqyDLPU7+ZzO01JI+yspn2gtto0XUm5KuxUPK24+xHD6R1UZSCSJKXY1QsKQfJ+gjzEjrtGvmASx1SUrpmyzVmf4qLwFB1ViRZmDZFtHIuuUVBBb835dCs2W+d7a+icGOCtGQbFcHvW0FODibnY5qq8v5w/P9i9PSarDaGgYb+1pMSnF3p8FsHAjk3Wccg2a1GQ==";
+    }
+    
+    private String getValidCertificate()
+    {
+        return "-----BEGIN CERTIFICATE-----MIIDwjCCAqoCCQDxVbCjIKynQjANBgkqhkiG9w0BAQsFADCBojELMAkGA1UEBhMCTkwxEDAOBgNVBAgMB1V0cmVjaHQxEDAOBgNVBAcMB1V0cmVjaHQxETAPBgNVBAoMCFJhYm9iYW5rMRMwEQYDVQQLDApBc3Nlc3NtZW50MSIwIAYDVQQDDBlTYW5kYm94LVRQUDpleGNlbGxlbnQgVFBQMSMwIQYJKoZIhvcNAQkBFhRuby1yZXBseUByYWJvYmFuay5ubDAeFw0yMDAxMzAxMzIyNDlaFw0yMTAxMjkxMzIyNDlaMIGiMQswCQYDVQQGEwJOTDEQMA4GA1UECAwHVXRyZWNodDEQMA4GA1UEBwwHVXRyZWNodDERMA8GA1UECgwIUmFib2JhbmsxEzARBgNVBAsMCkFzc2Vzc21lbnQxIjAgBgNVBAMMGVNhbmRib3gtVFBQOmV4Y2VsbGVudCBUUFAxIzAhBgkqhkiG9w0BCQEWFG5vLXJlcGx5QHJhYm9iYW5rLm5sMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAryLyouTQr1dvMT4qvek0eZsh8g0DQQLlOgBzZwx7iInxYEAgMNxCKXiZCbmWHBYqh6lpPh+BBmrnBQzB+qrSNIyd4bFhfUlQ+htK08yyL9g4nyLt0LeKuxoaVWpInrB5FRzoEY5PPpcEXSObgr+pM71AvyJtQLxZbqTao4S7TRKecUm32Wwg+FWY/StSKlox3QmEaxEGU7aPkaQfQs4hrtuUePwKrbkQ2hQdMpvI5oXRWzTqafvEQvND+IyLvZRqf0TSvIwsgtJd2tch2kqPoUwng3AmUFleJbMjFNzrWM7TH9LkKPItYtSuMTzeSe9o0SmXZFgcEBh5DnETZqIVuQIDAQABMA0GCSqGSIb3DQEBCwUAA4IBAQASFOkJiKQuL7fSErH6y5Uwj9WmmQLFnit85tjbo20jsqseTuZqLdpwBObiHxnBz7o3M73PJAXdoXkwiMVykZrlUSEy7+FsNZ4iFppoFapHDbfBgM2WMV7VS6NK17e0zXcTGySSRzXsxw0yEQGaOU8RJ3Rry0HWo9M/JmYFrdBPP/3sWAt/+O4th5Jyk8RajN3fHFCAoUz4rXxhUZkf/9u3Q038rRBvqaA+6c0uW58XqF/QyUxuTD4er9veCniUhwIX4XBsDNxIW/rwBRAxOUkG4V+XqrBb75lCyea1o/9HIaq1iIKI4Day0piMOgwPEg1wF383yd0x8hRW4zxyHcER-----END CERTIFICATE-----";
     }
 }

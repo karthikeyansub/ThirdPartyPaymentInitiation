@@ -6,6 +6,8 @@ import java.io.Serializable;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.rebobank.payment.constant.PaymentInitiationConstant;
 
 import lombok.AllArgsConstructor;
@@ -21,6 +23,7 @@ import lombok.ToString;
 @Setter
 @EqualsAndHashCode
 @ToString
+@JsonInclude(Include. NON_NULL)
 public class PaymentInitiationRequest implements Serializable
 {
     private static final long serialVersionUID = 2416661968436935895L;

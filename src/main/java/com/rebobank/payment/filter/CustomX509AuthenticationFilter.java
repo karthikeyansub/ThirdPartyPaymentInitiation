@@ -28,13 +28,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.web.authentication.preauth.x509.X509AuthenticationFilter;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rebobank.payment.config.AuthenticationRequestWrapper;
 import com.rebobank.payment.constant.PaymentInitiationConstant;
@@ -45,11 +38,19 @@ import com.rebobank.payment.model.PaymentRejectedResponse;
 import com.rebobank.payment.util.ErrorReasonCode;
 import com.rebobank.payment.util.TransactionStatus;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.authentication.preauth.x509.X509AuthenticationFilter;
+
 import sun.security.provider.X509Factory;
 
 /**
  * Customer X.509 authentication filter
  */
+@SuppressWarnings("restriction")
 public class CustomX509AuthenticationFilter extends X509AuthenticationFilter
 {
 
@@ -145,19 +146,6 @@ public class CustomX509AuthenticationFilter extends X509AuthenticationFilter
 
         return (X509Certificate) CertificateFactory.getInstance("X.509")
                 .generateCertificate(new ByteArrayInputStream(decoded));
-    }
-
-    private X509Certificate readClientCertificate(HttpServletRequest request)
-    {
-        X509Certificate[] certs = (X509Certificate[]) request
-                .getAttribute("javax.servlet.request.X509Certificate");
-
-        if (certs != null && certs.length > 0) {
-            LOGGER.debug("X.509 client authentication certificate: {}", certs[0]);
-            return certs[0];
-        } else {
-            throw new UnknownCertificateException("Unknown Certificate");
-        }
     }
 
     private byte[] getDigestMessage(String message) throws NoSuchAlgorithmException
