@@ -1,7 +1,7 @@
 package com.rebobank.payment.exception;
 
 /**
- * Generic exception 
+ * Generic exception
  */
 public class GenericException extends RuntimeException
 {

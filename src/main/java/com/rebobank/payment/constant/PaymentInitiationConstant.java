@@ -1,8 +1,13 @@
 
 package com.rebobank.payment.constant;
 
-public interface PaymentInitiationConstant
+public class PaymentInitiationConstant
 {
+
+    private PaymentInitiationConstant()
+    {
+
+    }
 
     public static final String IBAN_PATTERN = "[A-Z]{2}[0-9]{2}[a-zA-Z0-9]{1,30}";
 
@@ -19,5 +24,7 @@ public interface PaymentInitiationConstant
     public static final String ALGORITHM_SHA256WITHRSA = "SHA256WithRSA";
 
     public static final String DIGEST_ALGORITHM_SHA256 = "SHA-256";
+
+    public static final String CONTENT_TYPE_APPLICATION_JSON = "application/json";
 
 }
