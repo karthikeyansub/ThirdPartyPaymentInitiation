@@ -23,4 +23,4 @@ Step #2: invoke the initiate-payment service with below URL
 
 > https://localhost:8080/v1.0.0/initiate-payment
 
-Step #3: Use the payload, x-request-id and signature given in the example-signature.md file for testing
+Step #3: Use the payload, x-request-id, signature and signature-certificate given in the example-signature.md file for testing

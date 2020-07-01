@@ -43,6 +43,6 @@ public class PaymentInitiationController
         LOGGER.info("Initiate payment controller");
         PaymentAcceptedResponse response = paymentInitiationService.initiatePayment(request);
 
-        return new ResponseEntity<PaymentAcceptedResponse>(response, HttpStatus.CREATED);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 }

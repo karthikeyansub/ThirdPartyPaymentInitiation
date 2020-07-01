@@ -45,12 +45,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.authentication.preauth.x509.X509AuthenticationFilter;
 
-import sun.security.provider.X509Factory;
-
 /**
  * Customer X.509 authentication filter
  */
-@SuppressWarnings("restriction")
 public class CustomX509AuthenticationFilter extends X509AuthenticationFilter
 {
 
@@ -139,10 +136,12 @@ public class CustomX509AuthenticationFilter extends X509AuthenticationFilter
 
     private X509Certificate parseCertificate(HttpServletRequest request) throws CertificateException
     {
+        final String BEGIN_CERT = "-----BEGIN CERTIFICATE-----";
+        final String END_CERT = "-----END CERTIFICATE-----";
         String certStr = request.getHeader("Signature-Certificate");
         // before decoding we need to get rod off the prefix and suffix
-        byte[] decoded = Base64.getDecoder().decode(certStr.replaceAll(X509Factory.BEGIN_CERT, "") // NOSONAR
-                .replaceAll(X509Factory.END_CERT, "")); // NOSONAR
+        byte[] decoded = Base64.getDecoder().decode(certStr.replaceAll(BEGIN_CERT, "") // NOSONAR
+                .replaceAll(END_CERT, "")); // NOSONAR
 
         return (X509Certificate) CertificateFactory.getInstance("X.509")
                 .generateCertificate(new ByteArrayInputStream(decoded));
