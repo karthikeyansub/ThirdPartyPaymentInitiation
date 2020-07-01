@@ -21,23 +21,23 @@ import lombok.ToString;
 @Setter
 @EqualsAndHashCode
 @ToString
-public class PaymentInitiationRequest implements PaymentInitiationConstant, Serializable
+public class PaymentInitiationRequest implements Serializable
 {
     private static final long serialVersionUID = 2416661968436935895L;
 
     @NotNull(message = "Debtor IBAN is null")
-    @Pattern(regexp = IBAN_PATTERN, message = "Incorrect Debtor IBAN")
+    @Pattern(regexp = PaymentInitiationConstant.IBAN_PATTERN, message = "Incorrect Debtor IBAN")
     private String debtorIBAN;
 
     @NotNull(message = "Creditor IBAN is null")
-    @Pattern(regexp = IBAN_PATTERN, message = "Incorrect Creditor IBAN")
+    @Pattern(regexp = PaymentInitiationConstant.IBAN_PATTERN, message = "Incorrect Creditor IBAN")
     private String creditorIBAN;
 
     @NotNull(message = "Amount is null")
-    @Pattern(regexp = AMOUNT_PATTERN, message = "Invalid Amount")
+    @Pattern(regexp = PaymentInitiationConstant.AMOUNT_PATTERN, message = "Invalid Amount")
     private String amount;
 
-    @Pattern(regexp = CURRENCY_PATTERN, message = "Invalid Currency")
+    @Pattern(regexp = PaymentInitiationConstant.CURRENCY_PATTERN, message = "Invalid Currency")
     private String currency;
 
     @NotNull(message = "EndToEndId is null")
