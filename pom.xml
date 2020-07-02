@@ -8,7 +8,7 @@
 		<version>2.3.0.RELEASE</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.rebobank.payment</groupId>
+	<groupId>com.rabobank.payment</groupId>
 	<artifactId>payment-initiation</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Payment initiation</name>
